@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WebXR Spinning Cube — Quest 2</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #000; }
+    canvas { display: block; }
+    .hint { position: fixed; left: 12px; bottom: 12px; color: #ddd; font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; opacity: .9; }
+  </style>
+</head>
+<body>
+  <div class="hint">Tap “Enter VR” in the button, then look at the spinning cube.</div>
+  <script type="module">
+    // Three.js + WebXR (VR) single-file example for Oculus/Meta Quest 2
+    // Host this over HTTPS, open in the Quest Browser, tap "Enter VR".
+
+    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+    import { VRButton } from 'https://unpkg.com/three@0.160.0/examples/jsm/webxr/VRButton.js';
+
+    // Scene
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+
+    // Camera (start at human eye height ~1.6 m)
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
+    camera.position.set(0, 1.6, 3);
+
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.xr.enabled = true; // enable WebXR
+    document.body.appendChild(renderer.domElement);
+
+    // WebXR VR button
+    document.body.appendChild(VRButton.createButton(renderer));
+
+    // Lights
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x222233, 1.2);
+    scene.add(hemi);
+    const dir = new THREE.DirectionalLight(0xffffff, 0.6);
+    dir.position.set(1, 2, 1);
+    scene.add(dir);
+
+    // Ground grid for orientation
+    const grid = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
+    grid.position.y = 0;
+    scene.add(grid);
+
+    // Spinning cube at comfortable viewing distance
+    const boxGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+    const boxMat = new THREE.MeshStandardMaterial({ color: 0x44aa88, metalness: 0.1, roughness: 0.6 });
+    const cube = new THREE.Mesh(boxGeo, boxMat);
+    cube.position.set(0, 1.6, -1.5);
+    scene.add(cube);
+
+    // Simple animate loop using XR frame time
+    renderer.setAnimationLoop((time) => {
+      const t = time * 0.001; // ms -> s
+      cube.rotation.x = t * 0.8;
+      cube.rotation.y = t * 1.2;
+      renderer.render(scene, camera);
+    });
+
+    // Handle resize
+    addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+  </script>
+</body>
+</html>
